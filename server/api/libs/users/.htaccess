@@ -1,6 +1,6 @@
 RewriteEngine On
-#RewriteBase /~user1/REST/server/api/libs/users/
-RewriteBase /user1/REST/server/api/libs/users/
+RewriteBase /~user1/REST/server/api/libs/users/
+#RewriteBase /user1/REST/server/api/libs/users/
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
