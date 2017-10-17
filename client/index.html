@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Shop Cars</title>
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"  
+        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <link rel="stylesheet" href="css/style.css">
+    </head>
+    <body>
+        <div class="cars">
+            <div class="header">
+                <div class="logo">CARS SHOP</div>
+                <div class="log-options" v-if="!auth">
+                    <form @submit.prevent="checkLogIn">
+                        <input class="input-header" v-model="login" type="text" name="login" placeholder=" Login">
+                        <input class="input-header" v-model="password"  type="password" name="password" placeholder=" Password">
+                        <div class="log-in-btn">
+                            <button type="submit">Login</button>
+                        </div>
+                        <div class="sing-up-btn">
+                            <!--<button onClick='location.href="http://192.168.0.15/~user1/REST/client/registration.html"' >Sing Up</button>-->
+                            <button onClick='location.href="http://rest/user1/REST/client/registration.html"'>Sing Up</button>
+                        </div>
+                    </form> 
+                    <div class="errMessageLogIn">{{errMessageLogIn}}</div>
+                </div>
+                <div class="log-options-user" v-if="auth">
+                    <div class="user-login">{{login}}</div>        
+                    <div class="user-header-btn" v-on:click="ordersBlock=!ordersBlock">My Orders</div>
+                    <div class="user-header-btn" v-on:click="logout">Logout</div>
+                </div>
+            </div>
+            <div class="orders-block" v-if="ordersBlock">
+                <div class="list-box">
+                    <div class="errMessageChangeOrder">{{errMessageChangeOrder}}</div> 
+                    <ul class="list-group list-order" v-for="order in userOrders" :order="order">
+                        <li class="list-group-item li-order">
+                            <div class="order-params">
+                                <b>Brand:</b>  {{order.brand}}
+                                <b>Model:</b>  {{order.model}}
+                                <b>Price:</b>  {{order.price}}<b> EUR</b>
+                                <b>Payment:</b>  {{order.payment}}
+                                <i>|  {{order.stat}}  |</i>
+                            </div>
+                            <div class="order-select">
+                                <select  v-model="order.stat" v-on:change="changeStatusOrder(order.id_order, order.stat)">
+                                    <option v-bind:key=('orderStatus') v-for="status in statusList" :orderStatus="orderStatus" :value="status.value">
+                                        {{status.title}}
+                                    </option>
+                                </select>
+                            </div>
+                        </li>
+                    </ul> 
+                </div>
+            </div>
+            <div class="select-options">
+                <select id="brand" v-model="brand" v-on:change="filteredCars">
+                    <option value="-">Brands</option>
+                    <option v-bind:key=('brand') v-for="brand in options.brands" :brand="brand" :value="brand.value">
+                    {{brand.title}}
+                    </option>
+                </select>
+
+                <select id="year" v-model="year" v-on:change="filteredCars" class="text-danger">
+                    <option value="-">Year</option>
+                    <option v-bind:key=('year') v-for="year in options.years" :year="year" :value="year.value">
+                    {{year.title}}
+                    </option>
+                </select>
+
+                <select id="engine" v-model="engine" v-on:change="filteredCars">
+                    <option value="-">Engine</option>
+                    <option v-bind:key=('engine') v-for="engine in options.engines" :engine="engine" :value="engine.value">
+                    {{engine.title}}
+                    </option>
+                </select>
+
+                <select id="color" v-model="color" v-on:change="filteredCars">
+                    <option value="-">Color</option>
+                    <option v-bind:key=('color') v-for="color in options.colors" :color="color" :value="color.value">
+                    {{color.title}}
+                    </option>
+                </select>
+
+                <select id="speed" v-model="speed" v-on:change="filteredCars">
+                    <option value="-">Max Speed</option>
+                    <option v-bind:key=('speed') v-for="speed in options.speeds" :speed="speed" :value="speed.value">
+                    {{speed.title}}
+                    </option>
+                </select>
+
+                <select id="price" v-model="price" v-on:change="filteredCars">
+                    <option value="-">Price</option>
+                    <option v-bind:key=('price') v-for="price in options.prices" :value="price.value">
+                    {{price.title}}
+                    </option>
+                </select>
+            </div>
+
+            <div v-for="product in carList" :product="product" class="carsList" v-show="!carSelected">
+                <div class="carBox">
+                    <p>{{product.brand}}</p>
+                    <p>{{product.model}}</p>
+                    <p>{{product.price}} EUR</p>
+                    <div v-on:click="openCar(product.id_car)" class="moreBtn">More...</div>
+                </div>
+            </div>
+            <div v-if="carSelected">
+                <div class="carSelected">
+                    <h2><b>{{selectedCar.brand}}</b></h2>
+                    <p>Model: {{selectedCar.model}}</p>
+                    <p>Year: {{selectedCar.year}}</p>
+                    <p>Engine: {{selectedCar.engine}}</p>
+                    <p>Max speed: {{selectedCar.speed}}</p>
+                    <p>Color: {{selectedCar.color}}</p>
+                    <p><b>{{selectedCar.price}} EUR</b></p>
+                </div>
+
+                <div class="orderForm">
+                    <form @submit.prevent="createOrder">
+                        <div v-if="auth">
+                            <h4 v-if="messageCreateOrder != ''">{{ messageCreateOrder }}</h4>
+
+                            <div class="payment-box">
+                                <div>
+                                    <input  v-model="payment" value="card" type="radio" name="radio" class="radio" id="radio1" checked/>
+                                    <label for="radio1">Credit Card</label>
+                                </div>
+                                <div>
+                                    <input  v-model="payment" value="cash" type="radio" name="radio" class="radio" id="radio2" />
+                                    <label for="radio2">Cash</label>
+                                </div>
+                            </div>
+
+                            <div class="order-btn">
+                                <button type="submit">Create order</button>
+                            </div>
+                        </div>
+                        <div class="order-btn" v-if="!auth">
+                            <span>For order you need to register</span>
+                            <button type="" onClick='location.href="http://rest/user1/REST/client/registration.html"'>Sing Up</button>
+                            <!--<button type="" onClick='location.href="http://192.168.0.15/~user1/REST/client/registration.html"'>Sing Up</button>-->
+                        </div>
+                    </form> 
+                </div>
+            </div>
+        </div>
+
+        <script src="https://unpkg.com/vue/dist/vue.js"></script>
+        <script src="js/vue.js"></script>
+    </body>
+</html>
